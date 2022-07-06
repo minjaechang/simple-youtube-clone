@@ -1,29 +1,42 @@
 // 네트워크 처리하는 클래스
+// axios는 old version browser 지원함
+import axios from 'axios';
 
+// https://axios-http.com/docs/instance
 export default class Youtube {
   constructor(key) {
-    this.key = key;
-    this.getRequestOptions = {
-      method: 'GET',
-      redirect: 'follow',
-    };
+    this.youtube = axios.create({
+      baseURL: 'https://youtube.googleapis.com/youtube/v3',
+      params: { key: key },
+    });
   }
 
   async mostPopular() {
-    const response = await fetch(
-      `https://youtube.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&maxResults=25&key=${this.key}`,
-      this.getRequestOptions
-    );
-    const result = await response.json();
-    return result.items;
+    const response = await this.youtube.get('/videos', {
+      params: {
+        part: 'snippet',
+        chart: 'mostPopular',
+        maxResults: 25,
+      },
+    });
+
+    // no need to format as json
+    return response.data.items;
   }
 
   async search(query) {
-    const response = await fetch(
-      `https://youtube.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&q=${query}&type=video&key=${this.key}`,
-      this.getRequestOptions
-    );
-    const result = await response.json();
-    return result.items.map((item) => ({ ...item, id: item.id.videoId }));
+    const response = await this.youtube.get('/search', {
+      params: {
+        part: 'snippet',
+        chart: 'mostPopular',
+        maxResults: 25,
+        q: query,
+      },
+    });
+
+    return response.data.items.map((item) => ({
+      ...item,
+      id: item.id.videoId,
+    }));
   }
 }
